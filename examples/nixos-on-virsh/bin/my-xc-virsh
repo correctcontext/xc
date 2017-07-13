@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+HERE=$(readlink -f "$(dirname "${BASH_SOURCE[0]}")")
+export PATH="$PATH:$HERE:$HERE/../implementation-common:$HERE/../implementation-virsh:$HERE/../../../bin"
+
+set -euo pipefail
+export SHELLOPTS
+
+source libbashuu || (echo "ERROR: Download libbashuu and put in the PATH (or use nix to do the job)"; exit 1)
+
+uu::app::add-scope cluster "Cluster wide commands"
+uu::app::add-scope node "Node level commands"
+uu::app::add-scope plumbing "Low level tools"
+uu::app::set-command-prefix "my-xc"
+uu::app::main "$@"

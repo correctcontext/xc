@@ -1,0 +1,25 @@
+source xc-lib
+function get-node-ip(){
+  local ip
+  ip=$(virsh domifaddr $MY_XC_NODE_ID | awk 'NR==3{print $4;}' | cut -d/ -f1)
+  if [[ "${ip:-}x" != x ]];then
+    echo ${ip}
+    return 0
+  fi
+  return 1
+}
+if ! xc::utils::wait-for-command "get-node-ip" get-node-ip;then
+  uu::error "Could not find $MY_XC_NODE_ID ip for some time, probably something went wrong."
+  exit 1
+else
+  ip=$(get-node-ip)
+fi
+if [ "${ip:-}x" == x ];then
+  uu::error "Cannot find IP for $MY_XC_NODE_ID"
+  exit 1
+fi
+uu::msg "Copying ${UU_COMMAND_POSITIONAL_ARGUMENTS[@]} to $MY_XC_NODE_ID..."
+SSH_AUTH_SOCK= NIX_SSHOPTS="-oStrictHostKeyChecking=no -oUserKnownHostsFile=/dev/null -i $MY_XC_SSH_PRIVATE_KEY_PATH -o IdentitiesOnly=yes " \
+  nix-copy-closure -v --to root@$ip "${UU_COMMAND_POSITIONAL_ARGUMENTS[@]}"
+  #nix copy -v --to ssh-ng://root@$ip "${UU_COMMAND_POSITIONAL_ARGUMENTS[@]}"
+uu::msg "Done."

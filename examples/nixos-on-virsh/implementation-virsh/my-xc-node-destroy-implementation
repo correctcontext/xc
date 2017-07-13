@@ -1,0 +1,6 @@
+source xc-lib-virsh
+STATE_PATH=$(xc::virsh::get-state-path "$MY_XC_NAME")
+if virsh list --all --name | grep -q "^$MY_XC_NODE_ID\$";then
+  virsh destroy "$MY_XC_NODE_ID"
+fi
+rm -f "$STATE_PATH/$MY_XC_NODE_ID.qcow2"

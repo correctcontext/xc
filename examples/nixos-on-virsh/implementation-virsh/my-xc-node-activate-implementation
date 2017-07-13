@@ -1,0 +1,9 @@
+
+bam=$(my-xc-node-build)
+uu::msg "Activating $bam on $MY_XC_NODE_ID..."
+my-xc-node-ssh "
+  set -eu
+  nix-env -p /nix/var/nix/profiles/system --set "$bam"
+  /nix/var/nix/profiles/system/bin/switch-to-configuration switch
+"
+uu::msg "Done."

@@ -1,0 +1,21 @@
+function validate-integer(){
+  case "${1:-KEEP}" in
+    KEEP)
+      return 0
+      ;;
+    +[0-9])
+      return 0
+      ;;
+    -[0-9])
+      return 0
+      ;;
+    [0-9])
+      return 0
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+}
+long=nodes-count short=c  env=XC_NODES_COUNT  validators=validate-integer help="How many nodes cluster should have, you can use +N, -N to add/remove nodes"       default=KEEP required=0  uu::command::define-option
+

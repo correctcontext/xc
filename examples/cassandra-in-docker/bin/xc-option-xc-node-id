@@ -1,0 +1,3 @@
+long=node-id short=p  env=XC_NODE_ID  validators=dns-name  \
+  help="Node ID (can be listed with 'xc list-nodes-ids')"       required=1  uu::command::define-option
+

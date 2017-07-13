@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+set -euo pipefail
+export SHELLOPTS
+HERE=$(dirname "${BASH_SOURCE[0]}")
+source libbashuu
+
+uu::command::set-description "Report virsh cluster status"
+uu::command::set-scope cluster
+uu::command::import-option option-my-xc-name
+uu::command::main "$@"
+
+virsh list | grep -e "^$MY_XC_NAME-" || true
+virsh net-list | grep -e "^$MY_XC_NAME-" || true

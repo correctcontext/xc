@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+set -euo pipefail
+export SHELLOPTS
+HERE=$(dirname "${BASH_SOURCE[0]}")
+source libbashuu
+
+uu::command::set-description "List instances of infrastructure"
+uu::command::set-scope cluster
+uu::command::import-option option-my-xc-name
+uu::command::require-implementation
+uu::command::main "$@"
+
+source my-xc-list-implementation

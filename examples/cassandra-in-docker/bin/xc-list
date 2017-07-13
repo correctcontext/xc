@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+set -euo pipefail
+export SHELLOPTS
+HERE=$(dirname "${BASH_SOURCE[0]}")
+source libbashuu
+
+uu::command::set-description "List instances of infrastructure"
+uu::command::set-scope cluster
+uu::command::import-option xc-option-xc-name
+long=filter  short=f  env=XC_FILTER  validators=dns-name  \
+  help="filter instances by name with regexp"       required=0  uu::command::define-option
+uu::command::require-implementation
+uu::command::main "$@"
+
+source xc-list-implementation

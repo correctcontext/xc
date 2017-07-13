@@ -1,0 +1,131 @@
+#!/usr/bin/env bash
+
+# Copyright 2018 Correct Context Sp. z o. o.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+set -eu
+export SHELLOPTS
+
+source xc-lib
+
+HERE=$(dirname ${BASH_SOURCE[0]})
+
+xc::virsh::get-net-xml(){
+  local name=$1
+  cat <<EOF
+    <network>
+      <name>$name</name>
+      <forward mode='nat'/>
+      <bridge name="$name" stp='on' delay='0'/>
+      <ip address='10.207.0.1' netmask='255.255.255.0'>
+        <dhcp>
+          <range start='10.207.0.2' end='10.207.0.10'/>
+        </dhcp>
+      </ip>
+    </network>
+EOF
+}
+xc::virsh::get-node-xml(){
+  local network=$1
+  local node_name=$2
+  local image_path=$3
+  cat <<EOF
+    <domain type='kvm'>
+      <name>$node_name</name>
+      <memory>3024000</memory>
+      <currentMemory>3024000</currentMemory>
+      <vcpu>1</vcpu>
+      <os>
+        <type arch='x86_64' machine='pc'>hvm</type>
+        <boot dev='hd'/>
+        <features><acpi/></features>
+      </os>
+      <devices>
+        <disk type='file' device='disk'>
+          <driver type='qcow2' />
+          <source file='$image_path'/>
+          <target dev='vda' bus='virtio'/>
+        </disk>
+        <interface type='network'>
+          <source network='$network'/>
+        </interface>
+        <graphics type='vnc' port='-1'/>
+        <serial type='pty'>
+          <target port='0'/>
+        </serial>
+        <console type='pty'>
+          <target type='serial' port='0'/>
+        </console>
+      </devices>
+    </domain>
+EOF
+}
+
+xc::virsh::get-state-path(){
+  local path=${1?Path inside storage for specific backend for specific XC deployment}
+  echo "${XC_VIRSH_IMAGES_PATH?Please set XC_VIRSH_IMAGES_PATH to the path where libvirt can store images, remember that current user and libvirtd user must have access to it}/$path"
+}
+
+xc::virsh::does-network-exist(){
+  if virsh net-list --name --all | grep -qw "$1";then
+    return 0
+  fi
+  return 1
+}
+
+xc::virsh::ensure-network(){
+  if ! xc::virsh::does-network-exist "$1";then
+    virsh net-create  <(xc::virsh::get-net-xml "$1")
+  fi
+}
+
+xc::virsh::node-nixos-hardware(){
+    local NIXOS_HOSTNAME=$1
+    local SSH_PRIVATE_KEY_PATH=$2
+    local SSH_PUBLIC_KEY=$(xc::utils::ssh-private-to-public "$SSH_PRIVATE_KEY_PATH")
+    cat <<EOF
+{config, pkgs,lib, ... }: {
+      networking.hostName = "$NIXOS_HOSTNAME";
+      networking.useDHCP = true;
+      networking.firewall.allowedTCPPorts = [ 22 ];
+      networking.firewall.enable=lib.mkDefault false;
+      networking.wireless.enable=lib.mkDefault false;
+      networking.dhcpcd.extraConfig = "noarp"; # speed up boot
+
+      boot.kernelParams = ["loglevel=4" "console=ttyS0" "boot.shell_on_fail" "shell_on_fail"];
+      boot.initrd.kernelModules = [ "virtio" "virtio_pci" "virtio_net" "virtio_rng" "virtio_blk" "virtio_console" ];
+      boot.loader.grub = {
+        enable = true;
+        device = "/dev/vda";
+        #timeout=0;
+      };
+      boot.loader.timeout=0;
+      services.mingetty.autologinUser = "root";
+      fileSystems = {
+        "/" = { label = "nixos"; fsType="ext4"; };
+      };
+      users.users.root.password="root";
+      services.openssh.enable=true;
+      services.openssh.passwordAuthentication = false;
+      users.users.root.openssh.authorizedKeys.keys = [ "$SSH_PUBLIC_KEY" ];
+      environment.systemPackages = with pkgs; [ wget ];
+      system.copySystemConfiguration = true;
+
+      #documentation.man.enable=false;
+      programs.man.enable = false;
+      services.nixosManual.enable=false;
+
+}
+EOF
+}

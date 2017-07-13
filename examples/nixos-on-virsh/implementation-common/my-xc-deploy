@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+set -euo pipefail
+export SHELLOPTS
+source libbashuu
+source xc-lib
+
+
+uu::command::set-description "deploy nodes"
+uu::command::set-scope cluster
+uu::command::import-option option-my-xc-name
+uu::command::import-option option-my-xc-nodes-count
+uu::command::import-option option-my-xc-nix-expression-path
+uu::command::import-option option-my-xc-ssh-private-key-path
+uu::command::main "$@"
+
+
+NODES_IDS=$(my-xc-list-nodes-ids)
+NODES_COUNT=$(my-xc-list-nodes-ids|wc -l)
+NEW_NODES_COUNT=$(xc::utils::calculate-number-change $NODES_COUNT $MY_XC_NODES_COUNT)
+
+if [ $NEW_NODES_COUNT -ne $NODES_COUNT ];then
+  echo "Nodes count: $NODES_COUNT -> $NEW_NODES_COUNT [$MY_XC_NODES_COUNT]"
+else
+  echo "Nodes count: $NEW_NODES_COUNT (no change) [$MY_XC_NODES_COUNT]"
+fi
+
+# Let's create virsh environment
+my-xc-shape --nodes-count $NEW_NODES_COUNT
+
+echo "Building and deploying nodes sequentially..."
+declare -A derivations
+for MY_XC_NODE_ID in $(my-xc-list-nodes-ids)
+do
+  MY_XC_NODE_ID=$MY_XC_NODE_ID my-xc-node-deploy
+done
+echo "Nodes built and deployed."
+

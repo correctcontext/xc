@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+set -euo pipefail
+export SHELLOPTS
+HERE=$(dirname "${BASH_SOURCE[0]}")
+source libbashuu
+
+uu::command::set-description "Run nodetool status"
+uu::command::set-scope cluster
+uu::command::import-option xc-option-xc-name
+uu::command::main "$@"
+
+SOME_NODE=$(xc list-nodes-ids | head -n1)
+docker exec -ti $SOME_NODE nodetool status

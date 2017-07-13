@@ -1,0 +1,4 @@
+#!/usr/bin/env nix-shell
+#! nix-shell -i bash -p nix-prefetch-git
+HERE=$(readlink -f "$(dirname "${BASH_SOURCE[0]}")")
+nix-prefetch-git --rev refs/heads/master --no-deepClone https://github.com/correctcontext/libbashuu/ |grep -v date > $HERE/libbashuu.json

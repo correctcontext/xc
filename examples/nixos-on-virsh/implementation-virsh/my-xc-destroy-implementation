@@ -1,0 +1,19 @@
+source xc-lib-virsh
+
+STATE_PATH=$(xc::virsh::get-state-path "$MY_XC_NAME")
+
+nodes=$(my-xc-list-nodes-ids)
+uu::debug "Existing nodes: $nodes"
+[ "${nodes:-}x" != x ] && echo "Removing nodes..."
+for node in ${nodes[@]}
+do
+  my-xc-node-destroy -p $node
+done
+
+if virsh net-list --all --name | grep "^$MY_XC_NAME\$";then
+  echo "Removing network..."
+  virsh net-destroy "$MY_XC_NAME"
+fi
+
+rm -rf "${STATE_PATH}"
+echo "Done."

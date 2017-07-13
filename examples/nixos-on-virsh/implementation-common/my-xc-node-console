@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+set -euo pipefail
+export SHELLOPTS
+HERE=$(dirname "${BASH_SOURCE[0]}")
+source libbashuu
+
+uu::command::set-description "Open virsh console"
+uu::command::set-scope node
+uu::command::import-option option-my-xc-name
+uu::command::import-option option-my-xc-node-id
+uu::command::require-implementation
+uu::command::main "$@"
+
+source my-xc-node-console-implementation

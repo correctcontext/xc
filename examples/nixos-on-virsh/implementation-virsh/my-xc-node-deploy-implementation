@@ -1,0 +1,2 @@
+my-xc-node-copy-closure-to $(my-xc-node-build)
+my-xc-node-activate

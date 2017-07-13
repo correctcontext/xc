@@ -1,0 +1,7 @@
+function nix-content-path-validator(){
+  if [ ! -f "$1" ];then
+    return 1;
+  fi
+  return 0;
+}
+long=nix-expression-path  short=x  env=MY_XC_NIX_EXPRESSION_PATH  validators=nix-content-path-validator help="Path to nix expression which generates node description"       required=1  uu::command::define-option

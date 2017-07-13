@@ -1,0 +1,13 @@
+ip=$(virsh domifaddr $MY_XC_NODE_ID | awk 'NR==3{print $4;}' | cut -d/ -f1 || true)
+if [ "${ip:-}x" == x ];then
+  uu::error "Cannot find IP for $MY_XC_NODE_ID"
+  exit 1
+fi
+SSH_AUTH_SOCK= ssh \
+  -oStrictHostKeyChecking=no \
+  -oUserKnownHostsFile=/dev/null \
+  -i "$MY_XC_SSH_PRIVATE_KEY_PATH" \
+  -o IdentitiesOnly=yes \
+  -tt \
+  root@$ip \
+  "${UU_COMMAND_POSITIONAL_ARGUMENTS[@]:-exit 0}"

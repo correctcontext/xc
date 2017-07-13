@@ -1,0 +1,1 @@
+long=ssh-private-key-path  short=i  env=MY_XC_SSH_PRIVATE_KEY_PATH  validators=ssh-private-key-path help="Path to ssh private key, which will be used to create/access node"       required=1  uu::command::define-option

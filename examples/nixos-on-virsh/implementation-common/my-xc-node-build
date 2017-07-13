@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+set -euo pipefail
+export SHELLOPTS
+HERE=$(dirname "${BASH_SOURCE[0]}")
+source libbashuu
+
+uu::command::set-description "Build nix expression for node"
+uu::command::set-scope node
+uu::command::import-option option-my-xc-name
+uu::command::import-option option-my-xc-node-id
+uu::command::import-option option-my-xc-nix-expression-path
+uu::command::import-option option-my-xc-ssh-private-key-path
+uu::command::require-implementation my-xc-node-build-implementation
+uu::command::main "$@"
+
+source my-xc-node-build-implementation

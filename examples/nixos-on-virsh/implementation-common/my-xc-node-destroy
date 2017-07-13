@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+HERE=$(dirname "${BASH_SOURCE[0]}")
+source libbashuu
+source xc-lib
+
+uu::command::set-description "Destroy running node (and remove disk image)"
+uu::command::set-scope node
+uu::command::import-option option-my-xc-name
+uu::command::import-option option-my-xc-node-id
+uu::command::require-implementation my-xc-node-destroy-implementation
+uu::command::main "$@"
+
+source my-xc-node-destroy-implementation

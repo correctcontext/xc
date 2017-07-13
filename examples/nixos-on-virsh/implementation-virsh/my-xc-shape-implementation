@@ -1,0 +1,66 @@
+source xc-lib-virsh
+xc::virsh::ensure-network "$MY_XC_NAME"
+
+STATE_PATH=$(xc::virsh::get-state-path "$MY_XC_NAME")
+mkdir -p "$STATE_PATH"
+
+base_config=$(xc::virsh::node-nixos-hardware "host-template" "$MY_XC_SSH_PRIVATE_KEY_PATH")
+base_img_expr="import <nixpkgs/nixos/lib/make-disk-image.nix> rec {
+  name=\"disk\";
+  pkgs = import <nixpkgs> {};
+  lib=pkgs.lib;
+  installBootLoader = true;
+  format=\"qcow2\";
+  diskSize=10048;
+  config = (import <nixpkgs/nixos> {configuration={pkgs, config, ...}: {
+        imports = [
+          ($base_config)
+        ];
+      };}).config;}
+  "
+base_img_sha=$(echo "$base_img_expr"|sha256sum |cut -f1 -d' ')
+if [ ! -f "$STATE_PATH/images/base-$base_img_sha/nixos.qcow2" ];then
+  echo "Building base image for nodes img:$base_img_sha image..."
+  uu::is-debug && export NIX_BUILD_ARGS="--verbose"
+  base_img=$(NIX_PATH=$NIX_PATH:nixos-config=. nix-build ${NIX_BUILD_ARGS[@]} --out-link "$STATE_PATH/images/base-$base_img_sha" --no-build-output -E "$base_img_expr")/nixos.qcow2
+  test -f "$base_img"
+  echo "Image img:$base_img_sha ready in $STATE_PATH/images/base-$base_img_sha/nixos.qcow2 ($base_img)"
+fi
+base_img="$STATE_PATH/images/base-$base_img_sha/nixos.qcow2"
+
+for node in `seq $MY_XC_NODES_COUNT`
+do
+  node_name="$MY_XC_NAME-$node"
+  if [ ! -f "$STATE_PATH/images/$node_name.qcow2" ];then
+    echo "Creating node image '$node_name'..."
+    qemu-img create -f qcow2 -b "$(readlink -f $base_img)" "$STATE_PATH/images/$node_name.qcow2" || rm -f "$STATE_PATH/$node_name.qcow2"
+    # cp "$STATE_PATH/images/$base_img_sha.qcow2" "$STATE_PATH/images/$node_name.qcow2"
+    #chmod 777 "$STATE_PATH/images/$node_name.qcow2"
+    echo "Node image '$node_name' created in '$STATE_PATH/images/$node_name.qcow2'."
+  fi
+  if ! virsh list --all --name | grep "^$node_name\$";then
+    echo "Creating node '$node_name'..."
+    virsh create <(xc::virsh::get-node-xml "$MY_XC_NAME" "$node_name" "$STATE_PATH/images/$node_name.qcow2")
+    echo "Node '$node_name' created."
+  fi
+done
+
+echo "Waiting for nodes..."
+for x in `seq 120`
+do
+  if [ $(virsh list --all --name | grep -ce "^$MY_XC_NAME-") -ge "${MY_XC_NODES_COUNT}" ];then
+    break
+  else
+    echo "Waiting for virsh nodes to be created..."
+    sleep 1
+  fi
+done
+
+export TO_DELETE=$(virsh list --name --all | grep -e "^$MY_XC_NAME-" | sort -n -t- -k3 | grep -v '^''$' | tail -n "+$((MY_XC_NODES_COUNT+1))")
+if [ ${#TO_DELETE} -gt 0 ];then
+  for n in ''${TO_DELETE[@]}
+  do
+    my-xc-node-destroy -p $n
+  done
+fi
+echo "Cluster shaped."

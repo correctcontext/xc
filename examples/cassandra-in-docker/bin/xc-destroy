@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+set -euo pipefail
+export SHELLOPTS
+HERE=$(dirname "${BASH_SOURCE[0]}")
+source libbashuu
+
+uu::command::set-description "Destroy cluster"
+uu::command::set-scope cluster
+uu::command::import-option xc-option-xc-name
+uu::command::main "$@"
+
+xc list-nodes-ids | xargs --no-run-if-empty docker rm -f

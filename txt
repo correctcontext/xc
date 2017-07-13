@@ -1,0 +1,1 @@
+https://github.com/valentin2105/Simplekube/blob/master/install_k8s.sh

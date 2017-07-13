@@ -1,0 +1,18 @@
+source xc-lib-virsh
+XC_EXPR=$(cat "$MY_XC_NIX_EXPRESSION_PATH")
+STATE_PATH=$(xc::virsh::get-state-path "$MY_XC_NAME")
+mkdir -p "$STATE_PATH/images"
+
+uu::msg "+ Building node $MY_XC_NODE_ID..."
+
+BUILD_EXPR="(import <nixpkgs/nixos> {configuration={
+    imports = [
+    (import $MY_XC_NIX_EXPRESSION_PATH {hostname=\"$MY_XC_NODE_ID\";})
+    ($(xc::virsh::node-nixos-hardware "$MY_XC_NODE_ID" "$MY_XC_SSH_PRIVATE_KEY_PATH"))
+    ];
+    };}).config.system.build.toplevel"
+
+uu::debug "$BUILD_EXPR"
+uu::is-debug && NIX_BUILD_ARGS="--verbose --show-trace"
+NIX_PATH=$NIX_PATH:nixos-config=  nix build ${NIX_BUILD_ARGS:-} "$BUILD_EXPR" --out-link $STATE_PATH/nix--$MY_XC_NODE_ID
+realpath "$STATE_PATH/nix--$MY_XC_NODE_ID"

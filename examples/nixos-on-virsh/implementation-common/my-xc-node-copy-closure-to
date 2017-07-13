@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+set -euo pipefail
+export SHELLOPTS
+HERE=$(dirname "${BASH_SOURCE[0]}")
+source libbashuu
+
+uu::command::set-description "Copy derivation to selected node"
+uu::command::set-scope node
+uu::command::import-option option-my-xc-node-id
+uu::command::import-option option-my-xc-ssh-private-key-path
+uu::command::require-implementation
+uu::command::main "$@"
+
+source my-xc-node-copy-closure-to-implementation

@@ -1,0 +1,1 @@
+long=name  short=n  env=MY_XC_NAME  validators=dns-name help="cluster name (dns compatible name)"       required=1  uu::command::define-option

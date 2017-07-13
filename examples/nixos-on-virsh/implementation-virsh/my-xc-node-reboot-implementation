@@ -1,0 +1,1 @@
+virsh reboot "$XC_NODE_ID"

@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+set -euo pipefail
+export SHELLOPTS
+HERE=$(dirname "${BASH_SOURCE[0]}")
+source libbashuu
+
+uu::command::set-description "Stop cluster (but don't destroy storage)"
+uu::command::set-scope cluster
+uu::command::import-option option-my-xc-name
+uu::command::main "$@"
+
+my-xc-list-nodes-ids | xargs --no-run-if-empty -P10 -I{} -- my-xc-node-stop -p {}

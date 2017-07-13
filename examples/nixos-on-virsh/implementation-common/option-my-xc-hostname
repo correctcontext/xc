@@ -1,0 +1,3 @@
+long=hostname short=  env=MY_XC_HOSTNAME  validators=dns-name  \
+  help="DNS-compatible hostname for this specific node"       required=1  uu::command::define-option
+

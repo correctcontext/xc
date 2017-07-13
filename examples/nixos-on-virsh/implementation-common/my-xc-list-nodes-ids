@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+set -euo pipefail
+export SHELLOPTS
+HERE=$(dirname "${BASH_SOURCE[0]}")
+source libbashuu
+
+uu::command::set-description "List all cluster nodes ids"
+uu::command::set-scope plumbing
+uu::command::import-option option-my-xc-name
+uu::command::require-implementation
+uu::command::main "$@"
+
+source my-xc-list-nodes-ids-implementation
+

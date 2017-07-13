@@ -1,0 +1,3 @@
+if virsh list --all --name | grep -q "^$MY_XC_NODE_ID\$";then
+  virsh destroy "$MY_XC_NODE_ID"
+fi

@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+set -euo pipefail
+export SHELLOPTS
+HERE=$(dirname "${BASH_SOURCE[0]}")
+source libbashuu
+
+uu::command::set-description "List all cluster nodes ids"
+uu::command::set-scope plumbing
+uu::command::import-option xc-option-xc-name
+uu::command::main "$@"
+
+docker ps -qaf "label=xc=cassandra-$XC_NAME"

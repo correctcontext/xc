@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+#! nix-shell -i bash -p libbashuu bash docker
+
+HERE=$(readlink -f "$(dirname "${BASH_SOURCE[0]}")")
+export PATH="$PATH:$HERE:$HERE/../../../libs"
+
+if command -v nix-env >/dev/null && [ -z ${RUN_THIS_AGAIN_INSIDE_NIX_SHELL:-} ];then
+  export RUN_THIS_AGAIN_INSIDE_NIX_SHELL=1
+  NIX_PATH=$NIX_PATH:nixpkgs-overlays=$HERE/../../../dependencies/ nix-shell "$0" "$@"
+  exit $?
+fi
+
+set -euo pipefail
+export SHELLOPTS
+
+source libbashuu || (echo "ERROR: Download libbashuu and put in the PATH (or use nix to do the job)"; exit 1)
+
+uu::app::add-scope cluster "Cluster wide commands"
+uu::app::add-scope plumbing "Low level tools"
+uu::app::main "$@"
