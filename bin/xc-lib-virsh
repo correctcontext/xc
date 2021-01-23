@@ -22,30 +22,40 @@ source xc-lib
 HERE=$(dirname ${BASH_SOURCE[0]})
 
 xc::virsh::get-net-xml(){
-  local name=$1
+  local name
+  name=$1
+  local ip_start
+  ip_start=$2
+  local ip_end
+  ip_end=$3
+  local ip_mask
+  ip_mask=$4
+
   cat <<EOF
     <network>
       <name>$name</name>
       <forward mode='nat'/>
       <bridge name="$name" stp='on' delay='0'/>
-      <ip address='10.207.0.1' netmask='255.255.255.0'>
+      <ip address='$ip_start' netmask='$ip_mask'>
         <dhcp>
-          <range start='10.207.0.2' end='10.207.0.10'/>
+          <range start='$ip_start' end='$ip_end'/>
         </dhcp>
       </ip>
     </network>
 EOF
 }
 xc::virsh::get-node-xml(){
-  local network=$1
-  local node_name=$2
-  local image_path=$3
+  local network=${1?virsh network name}
+  local node_name=${2?virsh node name}
+  local image_path=${3?virsh qcow2 image path}
+  local memory_bytes=${4:-1024000}  # memory in bytes
+  local cpu_count=${5:-1}
   cat <<EOF
     <domain type='kvm'>
-      <name>$node_name</name>
-      <memory>3024000</memory>
-      <currentMemory>3024000</currentMemory>
-      <vcpu>1</vcpu>
+      <name>${node_name}</name>
+      <memory>${memory_bytes}</memory>
+      <currentMemory>${memory_bytes}</currentMemory>
+      <vcpu>${cpu_count}</vcpu>
       <os>
         <type arch='x86_64' machine='pc'>hvm</type>
         <boot dev='hd'/>
@@ -54,11 +64,11 @@ xc::virsh::get-node-xml(){
       <devices>
         <disk type='file' device='disk'>
           <driver type='qcow2' />
-          <source file='$image_path'/>
+          <source file='${image_path}'/>
           <target dev='vda' bus='virtio'/>
         </disk>
         <interface type='network'>
-          <source network='$network'/>
+          <source network='${network}'/>
         </interface>
         <graphics type='vnc' port='-1'/>
         <serial type='pty'>
@@ -86,7 +96,7 @@ xc::virsh::does-network-exist(){
 
 xc::virsh::ensure-network(){
   if ! xc::virsh::does-network-exist "$1";then
-    virsh net-create  <(xc::virsh::get-net-xml "$1")
+    virsh net-create  <(xc::virsh::get-net-xml "$1" "$2" "$3" "$4")
   fi
 }
 
@@ -122,9 +132,13 @@ xc::virsh::node-nixos-hardware(){
       environment.systemPackages = with pkgs; [ wget ];
       system.copySystemConfiguration = true;
 
-      #documentation.man.enable=false;
-      programs.man.enable = false;
+      documentation.man.enable=false;
+      # programs.man.enable = false;
       services.nixosManual.enable=false;
+
+      swapDevices = [
+        {device="/var/lib/swap"; size=4096;}
+      ];
 
 }
 EOF
