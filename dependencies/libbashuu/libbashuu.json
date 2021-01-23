@@ -1,6 +1,9 @@
 {
   "url": "https://github.com/correctcontext/libbashuu/",
-  "rev": "e07d69b9a001088d9f9079c9eadb88fe9a2abca8",
-  "sha256": "15p7qybv0f4y9m37mai4j3ldmg1y0fqp7zj2vbrinzfcbna4m95w",
-  "fetchSubmodules": true
+  "rev": "58f4a2730a573ffd1ee68da9b8c574f7fbcd7faf",
+  "path": "/nix/store/pd43ijmpd5hhn4gg91gxpprd7zp5kia1-libbashuu",
+  "sha256": "1qa3wrzdyawycmqxzwzkrny1wb6zz3x1s9bfkfqaqg44ziqhqwag",
+  "fetchSubmodules": false,
+  "deepClone": false,
+  "leaveDotGit": false
 }
