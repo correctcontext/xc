@@ -69,7 +69,7 @@ xc::utils::calculate-number-change(){
   esac
 }
 
-uu::utils::has-file-content-changed(){
+xc::utils::has-file-content-changed(){
   local file_path=$1
   if [ "${file_path:0:1}" != "/" ];then
     local file_path=$(readlink -f "$file_path")
