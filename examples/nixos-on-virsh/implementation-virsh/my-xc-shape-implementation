@@ -1,5 +1,5 @@
 source xc-lib-virsh
-xc::virsh::ensure-network "$MY_XC_NAME"
+xc::virsh::ensure-network "$MY_XC_NAME" "$MY_XC_NETWORK_IP_START" "$MY_XC_NETWORK_IP_END" "$MY_XC_NETWORK_IP_MASK"
 
 STATE_PATH=$(xc::virsh::get-state-path "$MY_XC_NAME")
 mkdir -p "$STATE_PATH"
@@ -9,9 +9,8 @@ base_img_expr="import <nixpkgs/nixos/lib/make-disk-image.nix> rec {
   name=\"disk\";
   pkgs = import <nixpkgs> {};
   lib=pkgs.lib;
-  installBootLoader = true;
   format=\"qcow2\";
-  diskSize=10048;
+  diskSize=20048;
   config = (import <nixpkgs/nixos> {configuration={pkgs, config, ...}: {
         imports = [
           ($base_config)
@@ -40,7 +39,7 @@ do
   fi
   if ! virsh list --all --name | grep "^$node_name\$";then
     echo "Creating node '$node_name'..."
-    virsh create <(xc::virsh::get-node-xml "$MY_XC_NAME" "$node_name" "$STATE_PATH/images/$node_name.qcow2")
+    virsh create <(xc::virsh::get-node-xml "$MY_XC_NAME" "$node_name" "$STATE_PATH/images/$node_name.qcow2" "${MY_XC_NODE_MEMORY}")
     echo "Node '$node_name' created."
   fi
 done

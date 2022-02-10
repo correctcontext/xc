@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 HERE=$(readlink -f "$(dirname "${BASH_SOURCE[0]}")")
-export PATH="$PATH:$HERE:$HERE/../implementation-common:$HERE/../implementation-virsh:$HERE/../../../bin"
+export PATH="$PATH:$HERE:$HERE/../implementation-common:$HERE/../implementation-virsh:$HERE/../../../lib"
 
 set -euo pipefail
 export SHELLOPTS

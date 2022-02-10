@@ -9,6 +9,7 @@ uu::command::set-scope cluster
 uu::command::import-option option-my-xc-name
 uu::command::import-option option-my-xc-nodes-count
 uu::command::import-option option-my-xc-ssh-private-key-path
+uu::command::import-option option-my-xc-node-memory
 uu::command::require-implementation my-xc-shape-implementation
 uu::command::main "$@"
 
